@@ -5,6 +5,7 @@ import me.guard.shop.dto.ProductMypriceRequestDto;
 import me.guard.shop.dto.ProductRequestDto;
 import me.guard.shop.dto.ProductResponseDto;
 import me.guard.shop.entity.Product;
+import me.guard.shop.naver.dto.ItemDto;
 import me.guard.shop.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,5 +49,14 @@ public class ProductService {
         }
 
         return responseDtoList;
+    }
+
+    @Transactional
+    public void updateBySearch(Long id, ItemDto itemDto) {
+        Product product = productRepository.findById(id).orElseThrow(() ->
+                    new NullPointerException("해당 상품은 존재하지 않습니다.")
+                );
+
+        product.updateByItemDto(itemDto);
     }
 }
