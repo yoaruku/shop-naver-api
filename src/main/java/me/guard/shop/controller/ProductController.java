@@ -1,13 +1,12 @@
 package me.guard.shop.controller;
 
 import lombok.RequiredArgsConstructor;
+import me.guard.shop.dto.ProductMypriceRequestDto;
 import me.guard.shop.dto.ProductRequestDto;
 import me.guard.shop.dto.ProductResponseDto;
+import me.guard.shop.entity.Product;
 import me.guard.shop.service.ProductService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,5 +18,10 @@ public class ProductController {
     @PostMapping("/products")
     public ProductResponseDto createProduct(@RequestBody ProductRequestDto requestDto) {
         return productService.createProduct(requestDto);
+    }
+
+    @PutMapping("/products/{id}")
+    public ProductResponseDto updateProduct(@PathVariable Long id, @RequestBody ProductMypriceRequestDto requestDto) {
+        return productService.updateProduct(id, requestDto);
     }
 }
