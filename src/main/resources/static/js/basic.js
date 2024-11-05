@@ -109,7 +109,7 @@ function addProduct(itemDto) {
     // 1. POST /api/products 에 관심 상품 생성 요청
     $.ajax({
         type: 'POST',
-        url: '/api/products',
+        url: '/api/shop/products',
         contentType: 'application/json',
         data: JSON.stringify(itemDto),
         success: function (response) {
@@ -131,7 +131,7 @@ function showProduct(isAdmin = false) {
 
     $.ajax({
         type: 'GET',
-        url: '/api/products',
+        url: '/api/shop/products',
         contentType: 'application/json',
         success: function (response) {
             $('#product-container').empty();
@@ -194,7 +194,7 @@ function setMyprice() {
     // 3. PUT /api/product/${targetId} 에 data를 전달한다.
     $.ajax({
         type: 'PUT',
-        url: `/api/products/${targetId}`,
+        url: `/api/shop/products/${targetId}`,
         contentType: 'application/json',
         data: JSON.stringify({myprice: myprice}),
         success: function (response) {
