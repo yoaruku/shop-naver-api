@@ -58,7 +58,7 @@ function execSearch() {
     // 3. GET /api/search?query=${query} 요청
     $.ajax({
         type: 'GET',
-        url: `/api/search?query=${query}`,
+        url: `/api/shop/search?query=${query}`,
         success: function (response) {
             $('#search-result-box').empty();
             // 4. for 문마다 itemDto를 꺼내서 HTML 만들고 검색결과 목록에 붙이기!
