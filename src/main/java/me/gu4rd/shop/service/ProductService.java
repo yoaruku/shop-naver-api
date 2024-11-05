@@ -5,6 +5,7 @@ import me.gu4rd.shop.dto.ProductMypriceRequestDto;
 import me.gu4rd.shop.dto.ProductRequestDto;
 import me.gu4rd.shop.dto.ProductResponseDto;
 import me.gu4rd.shop.entity.Product;
+import me.gu4rd.shop.entity.User;
 import me.gu4rd.shop.naver.dto.ItemDto;
 import me.gu4rd.shop.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,8 @@ public class ProductService {
 
     public static final int MIN_MY_PRICE = 100;
 
-    public ProductResponseDto createProduct(ProductRequestDto requestDto) {
-        Product product = productRepository.save(new Product(requestDto));
+    public ProductResponseDto createProduct(ProductRequestDto requestDto, User user) {
+        Product product = productRepository.save(new Product(requestDto, user));
         return new ProductResponseDto(product);
     }
 
@@ -40,8 +41,8 @@ public class ProductService {
         return new ProductResponseDto(product);
     }
 
-    public List<ProductResponseDto> getProducts() {
-        List<Product> productList = productRepository.findAll();
+    public List<ProductResponseDto> getProducts(User user) {
+        List<Product> productList = productRepository.findAllByUser(user);
         List<ProductResponseDto> responseDtoList = new ArrayList<>();
 
         for (Product product : productList) {
@@ -58,5 +59,16 @@ public class ProductService {
                 );
 
         product.updateByItemDto(itemDto);
+    }
+
+    public List<ProductResponseDto> getAllProducts() {
+        List<Product> productList = productRepository.findAll();
+        List<ProductResponseDto> responseDtoList = new ArrayList<>();
+
+        for (Product product : productList) {
+            responseDtoList.add(new ProductResponseDto(product));
+        }
+
+        return responseDtoList;
     }
 }
