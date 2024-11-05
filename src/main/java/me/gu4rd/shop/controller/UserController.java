@@ -7,9 +7,11 @@ import me.gu4rd.shop.dto.SignupRequestDto;
 import me.gu4rd.shop.dto.UserInfoDto;
 import me.gu4rd.shop.entity.UserRoleEnum;
 import me.gu4rd.shop.security.UserDetailsImpl;
+import me.gu4rd.shop.service.FolderService;
 import me.gu4rd.shop.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +28,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final FolderService folderService;
 
     @GetMapping("/user/login-page")
     public String loginPage() {
@@ -62,5 +65,13 @@ public class UserController {
         boolean isAdmin = (role == UserRoleEnum.ADMIN);
 
         return new UserInfoDto(username, isAdmin);
+    }
+
+    @GetMapping("/user-folder")
+    public String gerUserInfo(Model model, @AuthenticationPrincipal UserDetailsImpl userDetails){
+
+        model.addAttribute("folders", folderService.getFolders(userDetails.getUser()));
+
+        return "index :: #fragment";
     }
 }
