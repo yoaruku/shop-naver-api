@@ -5,6 +5,7 @@ import me.gu4rd.shop.dto.SignupRequestDto;
 import me.gu4rd.shop.entity.User;
 import me.gu4rd.shop.entity.UserRoleEnum;
 import me.gu4rd.shop.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     // ADMIN_TOKEN
-    private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
+    @Value("${jwt.admin.token}")
+    private String ADMIN_TOKEN;
 
     public void signup(SignupRequestDto requestDto) {
         String username = requestDto.getUsername();

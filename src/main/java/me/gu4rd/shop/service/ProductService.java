@@ -6,8 +6,13 @@ import me.gu4rd.shop.dto.ProductRequestDto;
 import me.gu4rd.shop.dto.ProductResponseDto;
 import me.gu4rd.shop.entity.Product;
 import me.gu4rd.shop.entity.User;
+import me.gu4rd.shop.entity.UserRoleEnum;
 import me.gu4rd.shop.naver.dto.ItemDto;
 import me.gu4rd.shop.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,15 +46,23 @@ public class ProductService {
         return new ProductResponseDto(product);
     }
 
-    public List<ProductResponseDto> getProducts(User user) {
-        List<Product> productList = productRepository.findAllByUser(user);
-        List<ProductResponseDto> responseDtoList = new ArrayList<>();
+    public Page<ProductResponseDto> getProducts(User user, int page, int size, String sortBy, boolean isAsc) {
 
-        for (Product product : productList) {
-            responseDtoList.add(new ProductResponseDto(product));
+        Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        UserRoleEnum userRoleEnum = user.getRole();
+
+        Page<Product> productList;
+
+        if(userRoleEnum == UserRoleEnum.USER) {
+            productList = productRepository.findAllByUser(user, pageable);
+        } else {
+            productList = productRepository.findAll(pageable);
         }
 
-        return responseDtoList;
+        return productList.map(ProductResponseDto::new);
     }
 
     @Transactional
@@ -59,16 +72,5 @@ public class ProductService {
                 );
 
         product.updateByItemDto(itemDto);
-    }
-
-    public List<ProductResponseDto> getAllProducts() {
-        List<Product> productList = productRepository.findAll();
-        List<ProductResponseDto> responseDtoList = new ArrayList<>();
-
-        for (Product product : productList) {
-            responseDtoList.add(new ProductResponseDto(product));
-        }
-
-        return responseDtoList;
     }
 }
