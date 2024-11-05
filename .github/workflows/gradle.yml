@@ -1,0 +1,101 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+    # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+    - name: Set Yaml
+      uses: microsoft/variable-substitution@v1
+      with:
+        files: ./src/main/resources/application.yml 
+      env:
+        spring.datasource.url: ${{ secrets.DB_URL }} 
+        spring.datasource.username: ${{ secrets.DB_USERNAME }} 
+        spring.datasource.password: ${{ secrets.DB_PASSWORD }} 
+        spring.jpa.hibernate.ddl-auto: validate
+        spring.jpa.properties.hibernate.show-sql: true
+        spring.jpa.properties.hibernate.format_sql: true
+        spring.jpa.properties.hibernate.use_sql_comments: true
+        jwt.secret.key: ${{secrets.JWT_KEY}}
+        jwt.admin.token: ${{secrets.JWT_ADMIN_TOKEN}}
+        naver.client_id: ${{secrets.NAVER_ID}}
+        naver.client_pw: ${{secrets.NAVER_PW}}
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      
+    - name: Build with Gradle
+      run: ./gradlew clean build -x test
+
+    - name: Build Docker image
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/shop-naver-api:latest .
+
+    - name: Docker login
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+    - name: Docker Hub push
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/shop-naver-api:latest
+
+    # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
+    # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
+    #
+    # - name: Setup Gradle
+    #   uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+    #   with:
+    #     gradle-version: '8.9'
+    #
+    # - name: Build with Gradle 8.9
+    #   run: gradle build
+
+  run-docker-image-on-ec2:
+    needs: build
+    runs-on: ubuntu-latest
+    # runs-on: self-hosted
+    
+    steps:
+      - name: execute remote ssh & docker stop and run
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REMOTE_SSH_HOST }}
+          username: ${{ secrets.REMOTE_SSH_NAME }}
+          password: ${{ secrets.REMOTE_SSH_PWD }}
+          key: ${{ secrets.REMOTE_SSH_KEY }}
+          port: ${{ secrets.REMOTE_SSH_PORT }}
+          script: |
+            whoami
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/shop-naver-api:latest
+            sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
+            sudo docker run -e TZ=Asia/Seoul -it --name shop-naver-api --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/shop-naver-api:latest
+            sudo docker system prune -f
